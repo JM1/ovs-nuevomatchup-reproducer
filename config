@@ -1,0 +1,29 @@
+# RX PCI bus
+#
+# Discover available devices with:
+# $> dpdk-devbind.py --status-dev net
+pci_rx=
+
+# TX PCI bus
+#
+# Discover available devices with:
+# $> dpdk-devbind.py --status-dev net
+pci_tx=
+
+# SUT ip address
+# Required for LGEN only.
+sut_ip=
+
+# LGEN number of TXQs
+# Required for LGEN only.
+lgen_txq=
+
+# Required for LGEN only.
+pci_0=$(echo -e "$pci_rx\n$pci_tx" | sort | head -1)
+if [ "$pci_0" = "$pci_rx" ]; then
+    rxport=0
+    txport=1
+else
+    rxport=1
+    txport=0
+fi
