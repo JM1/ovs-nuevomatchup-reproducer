@@ -41,9 +41,9 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 if [ -z "$(ls -l /sys/class/iommu/*)" ]; then
-    error "IOMMU device(s) not found."
+    warn "IOMMU device(s) not found."
     warn "For example, enable Intel IOMMU driver with kernel arguments 'intel_iommu=on iommu=pt'."
-    exit 125
+    warn "Make sure to bind no IOMMU DPDK compatible dirvers, such as 'uio_pci_generic'"
 fi
 
 if grep '^HugePages_Free: *0$' /proc/meminfo; then
