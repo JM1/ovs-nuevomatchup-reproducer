@@ -36,6 +36,17 @@ third is required for ip connectivity between both nodes.
 The paper and code does not provide instructions on how to reproduce the rulesets. Hence, contact Alon Rashelbach
 <alonrs@gmail.com> first and ask him for a link to the ruleset artifacts.
 
+**NOTE:** The packet generator ([alonrs/simple-packet-gen](https://github.com/alonrs/simple-packet-gen)) which runs on
+load-generating (LGEN) machine generates packets where [both the source and destination mac addresses are
+`00:00:00:00:00:00`](https://github.com/alonrs/simple-packet-gen/blob/d8044276b360db38a0bc17a4ae0c05d2afb5af05/lib/packet.c#L59).
+Packets with such a mac address will often be dropped by switches. When using a switch to connect both machines ensure
+that those packets will be transmitted correctly. One workaround for Juniper switches such as EX4600 switches is to use
+[traffic mirroring](https://www.juniper.net/documentation/us/en/software/junos/network-mgmt/topics/topic-map/port-mirroring-and-analyzers-configuring.html):
+Place the DPDK network devices on both machines in distinct VLANs, i.e. a total of four VLANs will be used for the DPDK
+traffic. Traffic mirroring will then be set up from the first port of the load-generating (LGEN) machine to the first
+port of the system-under-test (SUT) machine. It will also be configured from the second port of latter to the second
+port of the former. (Bidirectional traffic mirroring is not supported).
+
 ## Build, deploy and test
 
 Install `git` and [Podman](https://podman.io/docs/installation) on two bare-metal servers. One server will be the
