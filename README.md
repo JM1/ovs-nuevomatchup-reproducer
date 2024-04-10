@@ -1,8 +1,10 @@
 # Reproducer for NuevoMatchUP
 
-This repository helps reproducing the test bed and benchmark results from [Scaling Open vSwitch with a Computational
-Cache][Rashelbach et al. (2022)] by Alon Rashelbach, Ori Rottenstreich and Mark Silberstein (2022). Basically, it wraps
-their code for Open vSwitch from [ovs-nuevomatchup] and their packet generator from [simple-packet-gen] in a
+This repository helps reproducing the test bed and benchmark results from the NuevoMatchUP papers by Alon Rashelbach,
+Ori Rottenstreich and Mark Silberstein, i.e. their conference paper [Scaling Open vSwitch with a Computational Cache][
+Rashelbach et al. (2022)] and journal paper [Scaling by Learning: Accelerating Open vSwitch Data Path With Neural
+Networks (2023)][rashelbach-2023-nuevomatchup-ieee].
+Basically, it wraps their [code for Open vSwitch][ovs-nuevomatchup] and [packet generator][simple-packet-gen] in a
 [Podman][podman] container. The container is based on Ubuntu 18.04 LTS (Bionic Beaver) and provides an environment which
 resembles the original software setup closely.
 
@@ -475,10 +477,11 @@ to reproduce the synthetic OpenFlow rules are unknown. The commands to generate 
 [build-lgen.sh](https://github.com/acsl-technion/ovs-nuevomatchup/blob/main/build-lgen.sh) from traffic traces like
 [CAIDA][caida] and [MAWI][mawi] are also not available.
 
-An earlier article [A Computational Approach to Packet Classification (2020)][Rashelbach et al. (2020)] from the
-same authors proves the correctness of the underlying RQ-RMI model in the appendix (this section is not peer-reviewed).
-Understanding and reproducing the NuevoMatch and NuevoMatchUP algorithms as well as understanding and verifying their
-theoretical foundation requires knowledge of machine-learning, in particular neural networks.
+A journal paper [A Computational Approach to Packet Classification (2021)][rashelbach-2021-nuevomatch-ieee] from the
+same authors proves the correctness of the underlying RQ-RMI model. An [earlier conference paper of the same name and
+authors][Rashelbach et al. (2020)] presents the proof in the appendix (this section is not peer-reviewed). Understanding
+and reproducing the NuevoMatch and NuevoMatchUP algorithms as well as understanding and verifying their theoretical
+foundation requires knowledge of machine-learning, in particular neural networks.
 
 The NuevoMatchUP module for OVS ([ovs-nuevomatchup]) does not provide tests. During development it was tested by Alon
 Rashelbach using the following approach:
@@ -1048,8 +1051,10 @@ Rashelbach using the following approach:
 
 
 [Pfaff et al. (2015)]: https://www.openvswitch.org/support/papers/nsdi2015.pdf
-[Rashelbach et al. (2020)]: https://arxiv.org/abs/2002.07584
+[Rashelbach et al. (2020)]: https://doi.org/10.1145/3387514.3405886
 [Rashelbach et al. (2022)]: https://www.usenix.org/conference/nsdi22/presentation/rashelbach
+[rashelbach-2021-nuevomatch-ieee]: https://doi.org/10.1109/TNET.2021.3131879
+[rashelbach-2023-nuevomatchup-ieee]: https://doi.org/10.1109/TNET.2022.3215143
 [libnuevomatchup]: https://alonrashelbach.com/libnuevomatchup/
 [ovs-nuevomatchup]: https://github.com/acsl-technion/ovs-nuevomatchup
 [foss]: https://en.wikipedia.org/wiki/Free_and_open-source_software
