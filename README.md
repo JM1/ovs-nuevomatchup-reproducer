@@ -208,14 +208,14 @@ At the load-generating (LGEN) machine run:
 dpdk-testpmd -w 0000:01:00.0 -w 0000:01:00.1 -- --forward-mode=macswap -i
 ```
 
-Inside the `testpmd>` shell at the load-generating (LGEN) machine start packet forwarding after sending an initial 
+Inside the `testpmd>` shell at the load-generating (LGEN) machine start packet forwarding after sending an initial
 packet first with:
 
 ```sh
 start tx_first
 ```
 
-To verify that this initial packet is forward infinitely between both machines, view the port statistics at the 
+To verify that this initial packet is forward infinitely between both machines, view the port statistics at the
 load-generating (LGEN) machine with:
 
 ```sh
@@ -489,7 +489,7 @@ Rashelbach using the following approach:
 > 1. Connect two machines back to back, one with a DPDK-based packet generator, other with OVS.
 > 2. The packet generator generates packets that match the OF rules while marking them with the OF rule ID inside the
 >    IPv4 payload.
-> 3. Each OF rule has an action that sets the dst IP to the rule's ID and then sends the packet back to the packet 
+> 3. Each OF rule has an action that sets the dst IP to the rule's ID and then sends the packet back to the packet
 >    generator.
 >
 > 4. When the packet returns, the packet generator compares the payload tag with the modified dst IP.
@@ -597,6 +597,10 @@ Rashelbach using the following approach:
   2024-03-13T08:51:11.736Z|00003|daemon_unix(monitor)|ERR|1 crashes: pid 2895 died, killed (Aborted), core dumped, restarting
   ```
 
+
+ ***Answer:*** This is probably a cleanup bug. We did not put effort in fixing this bug back at the time as it is not directly related to collecting performance results.
+
+
 * Why do ovs-vswitchd's log files for OVS-CFLOWS report that NuevoMatchUP is disabled while reporting
   `cflows_enabled=true` at the same time?
 
@@ -605,6 +609,7 @@ Rashelbach using the following approach:
   ```
   2024-03-23T02:37:09.574Z|00990|dpif_netdev_nmu(ovs-vswitchd)|INFO|NuevoMatchUp is disabled
   ```
+  ***Answer:*** TBD
 
 * Why do experiments for OVS-CFLOWS show upcalls in extended statistics although OVS-CFLOWS avoids upcalls according to
   [Rashelbach et al. (2022)]?
@@ -615,6 +620,8 @@ Rashelbach using the following approach:
   ```
   2024-03-23T04:51:15.326Z|00017|dpif_netdev(pmd-c00/id:9)|INFO|Extended stats: insertions: 7523 deletions: 0 total-flows: 153720 packets: 27232 subtables: 21.175840 upcalls: 7523 upcall-avg-us: 10.16 dfc-us: 2630.83 fastpath-us: 994427.51 execute-us: 1128.26 dpcls-us: 150492.99 lookup-us: 1927.69
   ```
+
+  ***Answer:*** TBD
 
 * Why do both experiments `cores` and `thr-caida-3m` show similar extended statistics for OVS-ORIG and OVS-CFLOWS, even
   with high number of flows (e.g. 500K)?
@@ -630,17 +637,21 @@ Rashelbach using the following approach:
   `data/generated/fw1-500k/thr-caida-3m-ovs-orig-t-7000-cores-2-n-handler-1-n-revalidator-1-n-rxq-1`:
 
   ```
-  2024-03-23T02:06:25.214Z|00017|dpif_netdev(pmd-c00/id:9)|INFO|Extended stats: insertions: 3805 deletions: 0 total-flows: 57296 packets: 15520 subtables: 88.337568 upcalls: 3805 upcall-avg-us: 12.23 dfc-us: 1406.60 fastpath-us: 997938.16 execute-us: 674.24 dpcls-us: 165588.50 lookup-us: 963.40 
+  2024-03-23T02:06:25.214Z|00017|dpif_netdev(pmd-c00/id:9)|INFO|Extended stats: insertions: 3805 deletions: 0 total-flows: 57296 packets: 15520 subtables: 88.337568 upcalls: 3805 upcall-avg-us: 12.23 dfc-us: 1406.60 fastpath-us: 997938.16 execute-us: 674.24 dpcls-us: 165588.50 lookup-us: 963.40
   ```
 
   According to [Rashelbach et al. (2022)], OVS-CFLOWS should outperform OVS-ORIG, in particular with higher number of
   flows.
+
+  ***Answer:*** TBD
 
 * Why does [scripts/analyze-log.sh](https://github.com/acsl-technion/ovs-nuevomatchup/blob/main/scripts/analyze-log.sh)
   print error `awk: cmd. line:31: (FILENAME=- FNR=1) fatal: division by zero attempted` for every ovs-vswitchd log file?
 
   The script tries to extract data from log files with `grep -Pi "reloading|tx rate|^tx|^rx" $logfile`. However, none of
   the log files have any matching lines?!
+
+  ***Answer:*** TBD
 
 * [Rashelbach et al. (2020)] (p. 547):
   > Thus, to find the match to a query with multiple fields, we query all RQ-RMIs (in parallel), each over the field on
@@ -652,13 +663,21 @@ Rashelbach using the following approach:
   According to the article, two cores were used for some benchmarks. How are RQ-RMIs queried in parallel with two cores?
   Multiple threads per core? One thread per RQ-RMI?
 
+  ***Answer:*** This paper explores various strategies for running RQRMI models. For OVS, we chose to run the RQRMI models sequentially on each core. We limited the number of RQRMI models to at most 2.
+
 * What is the size of the "single remainder set" as mentioned in [Rashelbach et al. (2020)] (p. 547)? What is the
   absolute number of entries and its percentage of the complete ruleset?
 
+  ***Answer:*** It depends on the ruleset. In OVS-CCACHE the remainder set is handeled by the Megaflow cache. In OVS-CFLOWS the remainder set is handeled by TupleMerge.
+
 * How exactly does the iSet partitioning algorithm work in [Rashelbach et al. (2020)]?
+
+  ***Answer:*** The Python version of the iSet partitioning algorithm is open-sourced and can be found in the GitHub reporitory of [Rashelbach et al. (2020)]. The [Rashelbach et al. (2022)] paper provide optimizations which are currently closed-source.
 
 * Is the iSet partitioning algorithm, i.e. "greedy heuristic" in [Rashelbach et al. (2020)] (p. 547), applied in each
   training session?
+
+  ***Answer:*** Yes. In practice it takes a few ms to complete for 100K rulesets.
 
 * [Rashelbach et al. (2020)] (p. 548):
 
@@ -668,6 +687,8 @@ Rashelbach using the following approach:
 
   How are long fields (48bits mac addresses, 128bits ipv6 addresses) handled by NuevoMatchUP? Does NuevoMatchUP differ
   from NuevoMatch?
+
+  ***Answer:*** Currently our tests show that RQRMI inference using FP32 can handle 48bit fields with reasonable accuracy error. Longer fields such as IPv6 must use FP64.
 
 * With an increasing number of iSets the memory consumption increases, causing NuevoMatchUP to loose its performance
   benefits because iSets no longer fit in a CPU's L1/L2 cache. Authors write in [Rashelbach et al. (2020)] (p. 547):
@@ -679,6 +700,8 @@ Rashelbach using the following approach:
   How does a ruleset, which causes a high number of iSets, look like? Would it be likely that OpenShift or OpenStack
   environments would face a huge number of iSets?
 
+  ***Answer:*** We did not test OpenShift/OpenStack rulesets. Please keep in mind that the number of iSets and their coverage can be calculated easily given a ruleset.
+
 * Table 2 in [Rashelbach et al. (2020)] (p. 552) shows that iSet coverage decreases with a decreasing number of rules.
   For 10K rules, the best iSet coverage of 65%+-35% is with 4 iSets. Figure 14 in [Rashelbach et al. (2020)] (p. 552)
   shows that execution time of NuevoMatch with 4 iSets is already higher than when using CutSplit without NuevoMatch.
@@ -688,8 +711,12 @@ Rashelbach using the following approach:
   rules (using 1 or 2 iSets)? Or is it better to use NeuvoMatch with TupleMerge (for remainder) using 4 iSets?
   Would it be better to use CutSplit or NeuroCuts or TupleMerge without NuevoMatch for less than 100K flows?
 
+  ***Answer:*** We believe that TupleMerge is the best strategy for the reminder as it supports incremental updates. In [Rashelbach et al. (2022)] we limit the number of iSets to be at most 2. We find that a total coverage below 45% does not prove better than the baseline.
+
 * What training time and target rate for the prediction error was used when creating figure 14 in
   [Rashelbach et al. (2020)] (p. 552)?
+
+  ***Answer:*** Max RQRMI error 128. We require minimum 45% iSet coverage. See "NuevoMatchUP configuration" in Sec 7.1 in [Rashelbach et al. (2022)] paper.
 
 * Figure 8 in [Rashelbach et al. (2020)] (p. 550) shows a throughput speedup for NuevoMatch (NM) compared to
   TupleMerge (TM) and others when using 2 cores and the ClassBench rulesets. NM has a thr. speedup of 1.2x over TM.
@@ -702,10 +729,14 @@ Rashelbach using the following approach:
   `other_config:n-revalidator-threads` and `other_config:n-handler-threads` have not been updated to reflect the lower
   number of cores available to OVS in [Rashelbach et al. (2022)] / [ovs-nuevomatchup]?
 
+  ***Answer:*** You can see the absolute OVS thr. in Fig8 ([Rashelbach et al. (2022)]). We use OVS with 2 cores. We did not test the effect of `ovs-vswitchd`'s config variables. Please bare in mind that the strategies introduced in [Rashelbach et al. (2020)] differ from the one that was actually taken in [Rashelbach et al. (2022)].
+
 * Figure 11 in [Rashelbach et al. (2020)] (p. 551) shows a thr. speedup of 2x for NuevoMatch over TupleMerge with 100K
   rules and more. However, the thr. axis omits most of thr. below 2M pps, the thr. speedup shown is ~1.6x for 100K rules
   and 1.4x for 1M rules. The thr. speedup numbers suggest that a single core has been used for figure 11 similar to
   figure 9. What ruleset, traffic traces and number of cores were used for figure 11?
+
+  ***Answer:*** Unfortunately we dont have a record of the exact ruleset used for Figure 11. We've taken the ruleset that best demonstrate this behavior.
 
 * Figures 11 and 13 and section "5.2.1 memory footprint comparison" in [Rashelbach et al. (2020)] (p. 551f) suggests
   that NuevoMatch's thr. gains stem from more memory efficient representation, where the RQ-RMI models and the remainder
@@ -717,6 +748,8 @@ Rashelbach using the following approach:
   rules, code and other data take from L1, L2, L3 caches? Is it reasonable to assume that more efficient CPU cache usage
   is responsible for NuevoMatch's thr. speedups?
 
+  ***Answer:*** We believe that the efficient CPU cache usage is indeed responsible for NuevoMatch's speedups. In Sec 7.4 in [Rashelbach et al. (2022)] we explain that speedups where mostely noticed when the original OVS had a large number of hash-tables in its Megaflow cache. In practice, by using NuevoMatch we were able to reduce the amount of hash tables (see Fig 11 in the same paper) and that was the source of speedup.
+
 * Figure 15 in [Rashelbach et al. (2020)] (p. 553) shows that the training time decreases heavily for search distance
   bounds of 128 but it does not improve significantly for higher bounds. In paragraph about "Training time and secondary
   search range." on p. 553 the authors write:
@@ -727,33 +760,47 @@ Rashelbach using the following approach:
   How have maximum search distance bounds be defined during RQ-RMI training? Is maximum search range bound a hard bound
   or affected/impacted by a probability?
 
+  ***Answer:*** We do not have a winning answer to that question. The RQRMI training technique consists of many iteratinos of submodel training sessions. We reiterate training sessions in submodels that had not reached their training error goal. This process shows a clear trade-off between the training time and the target error goal. Further research should be put in this domain. Currently, we set the error goal to 128, repeat the submodel training sessions at most 6 times, and use the trained model "as it is", even if it did not reach the target error goal (in other words, the target error goal is only used to select the submodels to retrain in the following training session).
+
 * Will a increasing number of fields affect NeuvoMatch ([Rashelbach et al. (2020)]) worse than the default packet
   classification algorithm used in OVS? Will it be worse than CutSplit or TupleMerge?
+
+  ***Answer:*** The effect would be as follows. (A) The iSet construction algorithm would have more difficulties to select the appropriate field by which to build the iSet. This could be fixed heuristically (e.g., only build iSets from src-ip and dst-ip fields). (B) The validation phase (Sec 3.6 in [Rashelbach et al. (2020)]) would need to check more fields. This should not pose a problem as the check grows linearly with the number of fields.
 
 * How has the breakdown in packet processing times in the datapath for different number of OpenFlow rules, shown in
   figure 3 in [Rashelbach et al. (2022)] (p. 1361), been determined? Based on 36 ClassBench OpenFlow rulesets and the
   Caida-short packet trace? How and where has OVS been instrumented? Are the tools and scripts available, which were
   used for doing the experiments?
 
+  ***Answer:*** Yes, using the ClassBench rules and Caida trace. The tools exist in the open-source modification of OVS available in GitHub. The numbers are printed to the OVS log file once a second.
+
 * Figure 3 in [Rashelbach et al. (2022)] (p. 1361) breaks down packet processing time into time spent at the Megaflow
   cache, the exact-match cache and applying actions. Are upcalls accounted for in the "Megaflow cache" category?
+
+  ***Answer:*** TBD
 
 * What traffic trace has been used to determine the OVS throughput during control-path upcalls in figure 4 in
   [Rashelbach et al. (2022)] (p. 1362)? How is OVS throughput affected by the other traffic traces and rulesets? How has
   this sampling every 100ms been implemented? Are the tools and scripts available, which were used for the experiments?
 
-* Throughput in figure 4 in [Rashelbach et al. (2022)] (p. 13629 maxes out at 0,9 Mpps for minimum-size 64 bytes
+  ***Answer:*** We used the CAIDA traffic trace. We do not have information of other traffic traces as we mainly focused on CAIDA. The sampling implementation is avaialble in our mofication of the OVS dpcls code avaialble in GitHub.
+
+* Throughput in figure 4 in [Rashelbach et al. (2022)] (p. 1362) maxes out at 0,9 Mpps for minimum-size 64 bytes
   packets. This is about 460MBit/s although the network devices are able to do 10GBit/s. Is such a low throughput to be
   expected for small-size packets? How does OVS perform without being sampled? How has sampling been done (statistics to
   stdout, instrumentation, ..)?
 
   (0,9 * 1000^2) p/s * 64 b/p * 1/1000^2 = 57,6 Mb/s (~460MBit/s)
 
+  ***Answer:*** The sampling did not affect much on the throughput. The combination of rulesets and the CAIDA traffic trace was the leading contributor to this behavior. Note that OVS did reach a maximum of ~5Mpps (See ruleset 9 in Fig 8) using the same sampling technique.
+
 * Throughput in figure 5 in [Rashelbach et al. (2022)] (p. 1362) maxes out at 3 Mpps for 64b packets. This corresponds
   to 192 Mb/s or 1536 MBit/s for a 10GBit/s link. Has OVS been sampled/instrumented during the tests? What OpenFlow
   rules were present, what traffic traces have been used?
 
   3*1000^2*64/^(1000^2)
+
+  ***Answer:*** We used the same traffic as Figure 4 (CAIDA). We do not recall the exact ruleset used for generating this chart. It may have been the same ruleset as in Figure 4.
 
 * [Rashelbach et al. (2022)] (p. 1361):
 
@@ -763,6 +810,8 @@ Rashelbach using the following approach:
   > estimated index, which in turn bounds the search and ensures lookup correctness.
 
   Where to find the proof for the maximum error bounds guarantee?
+
+  ***Answer:*** The same proof as in [Rashelbach et al. (2020)].
 
 * Authors write in [Rashelbach et al. (2022)] (p. 1361):
 
@@ -797,12 +846,16 @@ Rashelbach using the following approach:
 
   How much memory all these datastructures consume in total and in comparison to the default OVS implementation?
 
+  ***Answer:*** One array for lookup and another shadow array for training. The training takes place in a dedicated core. Note that the baseline uses this core for performing lookups, while the NuevoMatchUp version uses this core solely for training. Re/ memory: this is implementation specific. In our most recent implementation of the training algorithm we achieved a fully active/shadow training using a few MBs of memory for handling 500K rules.
+
 * [Rashelbach et al. (2022)] (p. 1364):
 
   > The update rate of OpenFlow rules varies between 400 to 338K updates per second [12, 13].
 
   Where do these update numbers come from? Reference `[12]` mentions 338K updates but does not explain how it derived
   the number from the cited source.
+
+  ***Answer:*** Similar numbers also appear in `[13]`. We did not check how the authors of these papers got these numbers.
 
 * RQ-RMI models in NuevoMatchUP ([Rashelbach et al. (2022)]) learn the distribution of buckets instead of the
   distribution of the rules like in NuevoMatch ([Rashelbach et al. (2020)]). [Rashelbach et al. (2022)] (p. 1364):
@@ -815,18 +868,26 @@ Rashelbach using the following approach:
   How does this affect the guaranteed maximum error bound for the estimated index? Does it turn into a maximum error
   bound for the estimated bucket? Hence a lookup could have to search in multiple adjacent buckets?
 
+  ***Answer:*** Indeed, instead of searching a list of ranges the search is performed on a list of buckets. Then, the verification phase checks all the rules in the bucket instead of a single rule. We have an efficient SIMD implementation for the validation phase that helps reduces the total validation time.
+
   Considering the constraint of at most l rules per bucket, is it guaranteed that multiple matching rules with different
   priorities always end up in the same bucket? Or will the lookup always look in adjacent buckets to find other matching
   rules with higher priority?
+
+  ***Answer:*** No need to look in adjacent buckets.
 
 * How does training via approximate sampling [Rashelbach et al. (2022)] (p. 1365) affect the model accuracy? Does the
   training algorithm still guarantee a tight bound on the maximum error of the estimated index when using approximate
   sampling instead of uniform sampling?
 
+  ***Answer:*** The bound is still correct regardless of the sampling technique. The error bound computations is performed after the training has finished.
+
 * How has training time and lookup time for different bucket sizes and the training time for uniform vs approximate
   sampling been measured in [Rashelbach et al. (2022)]? With the TensorFlow implementation ([Rashelbach et al. (2020)])
   or with the NuevoMatchUP implementation written in C++ ([libnuevomatchup])? Are the scripts and evaluation tools of
   the experiments available?
+
+  ***Answer:*** These were evaluated with the NuevoMatchUp implementation written in C++.
 
 * [Rashelbach et al. (2022)] (p. 1365):
 
@@ -834,9 +895,13 @@ Rashelbach using the following approach:
 
   What kind of algorithmic optimizations has been disabled?
 
+  ***Answer:*** The [Rashelbach et al. (2022)] paper introduces 3 improvmeents to the training algorithm, seen in Fig 7. The performance improvement measurements as reported in Fig 7 are independent of each other, meaning each one was measured while the two others were disabled.
+
 * Why do "megaflows frequently migrate between the megaflow cache and the RQ-RMI models" in OVS-CCACHE
   ([Rashelbach et al. (2022)] (p. 1365))? Isn't the megaflow cache only used for megaflow updates used during training
   and then emptied afterwards? Why/How do megaflows migrate from RQ-RMI models to megaflow cache?
+
+  ***Answer:*** In OVS-CCACHE the Megaflow cache acts as the remainder set. In each training iteration all megaflows are considered to iSet construction. This means that megaflows may migrate between two adjacent NeuvoMatchUp trained instances.
 
 * [Rashelbach et al. (2022)] (p. 1366) applied three traffic traces (CAIDA-short, MAWI and CAIDA-long) to 36 synthetic
   OpenFlow rulesets generated with ClassBench (12 rulesets x {1K, 100K, 500K rules}). The figures either explictly show
@@ -848,8 +913,12 @@ Rashelbach using the following approach:
 
   What are the CDFs (cumulative distribution functions) of flow length (in packets) for all three traffic traces?
 
+  ***Answer:*** Both CAIDA-sohrt and Mawi were measured. We chose to show only CAIDA-short due to the exceptionally slow results of the baseline for Mawi (see last paragraph before Sec 7.3). We used CAIDA-long only for Figure 14 to show the temporal behavior of the system. We did not conduct full experiments using CAIDA-long due to the long time it took to run these experiments.
+
 * `caida-3m` in [ovs-nuevomatchup] is CAIDA-short? `caida-3m` has ~96M entries and 6,8M unique entries which roughly
   matches the 100M/6M for CAIDA-short.
+
+  ***Answer:*** Yes.
 
 * [Rashelbach et al. (2022)] (p. 1366) adjusted traces to rules the following way:
 
@@ -863,7 +932,11 @@ Rashelbach using the following approach:
   this mean that 6000 packets will apply to a ruleset with 1K rules? For 500K rules, only 12 packets will be received
   (and apply) per rule?
 
+  ***Answer:*** Yes, on average.
+
   How do experimental results change when the SYN flag is not set?
+
+  ***Answer:*** We did not test the effect of the SYN flag (or any other flag).
 
 * [Rashelbach et al. (2022)] (p. 1367):
 
@@ -874,8 +947,12 @@ Rashelbach using the following approach:
   How do experimental results change when number of revalidator threads and flow limits are adopted to the 500K ruleset
   properly?
 
+  ***Answer:*** We did not test these configurations.
+
 * Why is connection tracking not used in [Rashelbach et al. (2022)] (p. 1367)? Is connection tracking supported by
   [libnuevomatchup]?
+
+  ***Answer:*** As far as we undeerstand OVS-CCACHE supports Contrack as it accelerates the existing Megaflow cache. OVS-CFLOWS does not.
 
 * [Rashelbach et al. (2022)] (p. 1367):
 
@@ -897,6 +974,8 @@ Rashelbach using the following approach:
 
   Crashes of `ovs-vswitchd`, which happen frequently (several times per log file), does not seem to affect CPU affinity.
 
+  ***Answer:*** We did not test other configurations of the revalidator threads.
+
 * [Rashelbach et al. (2022)] (p. 1367) uses the following NuevoMatchUP configuration for the benchmarks:
 
   > We use iSets with minimum 45% coverage, and train RQ-RMI neural nets with 4K samples.
@@ -910,8 +989,15 @@ Rashelbach using the following approach:
   What is the target coverage used during training for OVS-CFLOWS? 45%? Or 75% or 90% like shown in figure 15 in
   [Rashelbach et al. (2022)] (p. 1370)?
 
+  ***Answer:*** We chose these numbers empirically. For OVS-CFLOWS the configuration is the same unless stated otherwise.
+
 * What does a 3x / 5x delay mean in figure 13 in [Rashelbach et al. (2022)] (p. 1369)?
+
+  ***Answer:*** It means that the training process was delayed artificially by using sleep.
+
 * How many cores where available to OVS in figures 14 and 15 in [Rashelbach et al. (2022)] (p. 1369f)?
+
+  ***Answer:*** These figures were generated using the same configuration stated at the Methodology section (except specific parameters that explicitly stated such as coverage in Fig 15).
 
 * [Rashelbach et al. (2022)] states that OVS-CCACHE is compatible with offloading to NVIDIA NICs and DPUs using NVIDIA's
   Accelerated Switching and Packet Processing (ASAP2). The latter ["offloads OVS data-plane tasks to specialized
@@ -923,6 +1009,8 @@ Rashelbach using the following approach:
   > may accelerate the CPU handling of misses to the hardware OVS cache.
 
   How could OVS-CCACHE be used on the CPU side when the data-plane is offloaded to the DPU's or NIC's eSwitch?
+
+  ***Answer:*** As far as we know NVIDIA Bluefield SmartNICs treat Megaflow HW misses using OVS SW that runs ontop of their ARM cores. OVS-CCACHE can accelerate the packet classification mechanism used by OVS SW on these cores. In contrast, OVS-CFLOWS does not use Megaflows and so it cannot be used as part of this processing pipeline.
 
 * Regarding how [ovs-nuevomatchup] has been tested Alon Rashelbach wrote:
 
@@ -940,6 +1028,8 @@ Rashelbach using the following approach:
 
   What OpenFlow rule has been used instead? How much did this tweak to measure without unique actions per OpenFlow rule
   impact the performance? Do the experiments still resemble realistic production scenarios when applying this tweak?
+
+  ***Answer:*** After validating the correctness of the classification we altered the OF rules' actions to do simple port forwarding. The performance impact was significant: It turns out that a unique action per OF rule increases the fragmentation in the Megaflow generation process which results with an exeptionally high number of Megaflows. We would be happy to test NuevoMatchUp using realistic production OF rulesets.
 
 ## Future work
 
@@ -993,7 +1083,7 @@ Rashelbach using the following approach:
   > sophisticated SDN controllers use. For example, flow tables installed by the VMware network virtualization
   > controller [19] use a minimum of about 15 table lookups per packet in its packet processing pipeline. Long pipelines
   > are driven by two factors: reducing stages through cross-producting would often significantly increase the flow
-  > table sizes and developer preference to modularize the pipeline design. Thus, even more important than the 
+  > table sizes and developer preference to modularize the pipeline design. Thus, even more important than the
   > performance of a single classifier lookup, it is to reduce the number of flow table lookups a single packet
   > requires, on average.
 
