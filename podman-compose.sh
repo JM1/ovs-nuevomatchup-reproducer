@@ -184,12 +184,14 @@ ________EOF
 
         # Grant access to rulesets and provide place to store results
         podman_args+=(-v "$project_dir/data/:/ovs-nuevomatchup/data/")
-        
-        # Allow acess to uio devices (in case VFIO fails)
-        for dir in /dev/uio*; do
-            podman_args+=(-v $dir:$dir)
+
+        # Allow access to uio devices
+        for dev in /dev/uio*; do
+            if [ -e "$dev" ]; then
+                podman_args+=(--device "$dev:$dev")
+            fi
         done
-        
+
         # Unauthenticated and unencrypted RPC from load-generating (LGEN) machine to system-under-test (SUT) machine
         # NOTE: Required on system-under-test (SUT) machine only.
         podman_args+=(--publish '2001:2001/tcp')
